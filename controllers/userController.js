@@ -1,5 +1,4 @@
 import asyncHandler from "express-async-handler";
-import Joi from "joi";
 import generateToken from "../utils/generateToken.js";
 import { userWithNoPassword } from "../utils/userWithoutPassword.js";
 import User from "../models/userModel.js";

@@ -1,6 +1,10 @@
 import asyncHandler from "express-async-handler";
 
 import Memory from "../models/memoryModel.js";
+import Comment from "../models/commentModel.js";
+import sharedMemory from "../models/sharedMemoryModel.js";
+import { json } from "express";
+import likedMemory from "../models/likedMemoryModel.js";
 
 // @desc    get Memories and filters based on optional parameters
 // @route   Get /api/memory
@@ -44,4 +48,101 @@ const createMemory = asyncHandler(async (req, res) => {
   res.status(201).json(memory);
 });
 
-export { getMemories, createMemory };
+// @desc    Create a comment for given memory{Id}
+// @route   Get /api/memory/{Id}/comment
+// @access  Private/Auth
+const createMemoryComment = asyncHandler(async (req, res) => {
+  const { comment } = req.body;
+  const memory = await Memory.findById(req.params.id);
+
+  if (!memory) {
+    throw new Error("No memory exists with given Id");
+  }
+
+  const newComment = await Comment.create({
+    comment,
+    user: req.user._id,
+    memory: req.params.id,
+  });
+
+  res.status(201).json(newComment);
+});
+
+// @desc    share Memory
+// @route   Get /api/memory/{Id}/share
+// @access  Private/Auth
+const shareMemory = asyncHandler(async (req, res) => {
+  const memoryId = req.params.id;
+  const userId = req.user._id;
+
+  const { tags, description } = req.body;
+
+  const originalMemory = await Memory.findById({ _id: memoryId });
+  if (!originalMemory) {
+    throw new Error("No such memory exists");
+  }
+
+  const { _doc: originalMemoryDoc } = originalMemory;
+  const { _id: originalMemoryId, ...originalMemoryCopy } = originalMemoryDoc;
+
+  if (Array.isArray(tags) && tags.length > 1) {
+    originalMemoryCopy.tags = tags;
+  }
+
+  if (description) {
+    originalMemoryCopy.description = description;
+  }
+  originalMemoryCopy.user = req.user._id;
+  originalMemoryCopy.sharedFrom = originalMemoryId;
+
+  await Memory.create(originalMemoryCopy);
+
+  await sharedMemory.create({
+    user: userId,
+    memory: originalMemoryId,
+  });
+
+  res.status(200).json({ message: "Memory shared" });
+});
+
+// @desc    like a memory
+// @route   Get /api/memory/{Id}/like
+// @access  Private/Auth
+const likeMemory = asyncHandler(async (req, res) => {
+  const memoryId = req.params.id;
+  const userId = req.user._id;
+
+  const isAlreadyLiked = await likedMemory.findOne({
+    memory: memoryId,
+    user: userId,
+  });
+
+  if (isAlreadyLiked) {
+    const unliked = await likedMemory.findOneAndRemove({
+      memory: memoryId,
+      user: userId,
+    });
+
+    res.status(200).json({ message: "unliked sucessfully" });
+    return;
+  }
+
+  const liked = await likedMemory.create({
+    memory: memoryId,
+    user: userId,
+  });
+
+  if (!liked) {
+    throw new Error("Error liking memory");
+  }
+
+  res.status(200).json({ message: "Memory Liked successfully" });
+});
+
+export {
+  getMemories,
+  createMemory,
+  createMemoryComment,
+  shareMemory,
+  likeMemory,
+};

@@ -12,7 +12,7 @@ const memorySchema = mongoose.Schema({
   tags: [{ type: String }],
   images: [{ type: String }],
 
-  // Check virtuals to set below three values
+  // TODO: Check if a separate counter table can be formed? virtual fields?
   totalShares: {
     type: Number,
     default: 0,
@@ -26,30 +26,6 @@ const memorySchema = mongoose.Schema({
     type: Number,
     default: 0,
   },
-
-  comments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "Comment",
-    },
-  ],
-
-  likes: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
-  ],
-
-  sharedByUsers: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
-  ],
 
   user: {
     type: mongoose.Schema.Types.ObjectId,
