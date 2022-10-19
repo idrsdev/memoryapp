@@ -1,5 +1,5 @@
 import express from "express";
-const router = express.Router();
+
 import {
   authUser,
   getUserMemories,
@@ -8,8 +8,15 @@ import {
 
 import { isAuthenticated } from "../middleware/authMiddleware.js";
 
-router.route("/").post(registerUser);
+import {
+  validateAuthCredentials,
+  validateNewUser,
+} from "../validators/userValidator.js";
+
+const router = express.Router();
+
+router.route("/").post(validateNewUser, registerUser);
 router.route("/memory").get(isAuthenticated, getUserMemories);
-router.route("/login").post(authUser);
+router.route("/login").post(validateAuthCredentials, authUser);
 
 export default router;

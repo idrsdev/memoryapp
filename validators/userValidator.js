@@ -1,23 +1,32 @@
 import Joi from "joi";
 
-const validateNewUser = (user) => {
+const validateNewUser = (req, res, next) => {
   const schema = Joi.object({
     name: Joi.string().required(),
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   });
-  const { error, value } = schema.validate(user);
-  return error;
+
+  const { error } = schema.validate(req.body);
+
+  if (error) {
+    throw new Error(error);
+  }
+  next();
 };
 
-const validateAuthCredentials = (credentials) => {
+const validateAuthCredentials = (req, res, next) => {
   const schema = Joi.object({
     email: Joi.string().email(),
     password: Joi.string(),
   });
 
-  const { error, value } = schema.validate(credentials);
-  return error;
+  const { error } = schema.validate(req.body);
+
+  if (error) {
+    throw new Error(error);
+  }
+  next();
 };
 
 export { validateNewUser, validateAuthCredentials };
