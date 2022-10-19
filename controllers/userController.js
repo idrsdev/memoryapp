@@ -7,6 +7,7 @@ import {
   validateNewUser,
   validateAuthCredentials,
 } from "../validators/userValidator.js";
+import Memory from "../models/memoryModel.js";
 
 // @desc Register new user
 // @route POST /api/users
@@ -60,4 +61,14 @@ const authUser = asyncHandler(async (req, res, next) => {
     .status(201)
     .json({ ...userWithNoPassword(user), token: generateToken(user._id) });
 });
-export { authUser, registerUser };
+
+// @desc    get Memories of current user
+// @route   Get /api/user/memory
+// @access  Private/Auth
+const getUserMemories = asyncHandler(async (req, res) => {
+  const memories = await Memory.find({ user: req.user._id });
+
+  return res.status(200).json(memories);
+});
+
+export { authUser, registerUser, getUserMemories };

@@ -4,6 +4,7 @@ const router = express.Router();
 import {
   createMemory,
   createMemoryComment,
+  deleteMemory,
   getMemories,
   likeMemory,
   shareMemory,
@@ -13,6 +14,7 @@ import { newMemoryValidation } from "../validators/memoryValidator.js";
 
 router.route("/").get(getMemories);
 router.route("/").post(isAuthenticated, newMemoryValidation, createMemory);
+router.route("/:id").delete(isAuthenticated, deleteMemory);
 router.route("/:id/comment").post(isAuthenticated, createMemoryComment);
 router.route("/:id/share").post(isAuthenticated, shareMemory);
 router.route("/:id/like").post(isAuthenticated, likeMemory);

@@ -16,7 +16,12 @@ const newMemoryValidation = async (req, res, next) => {
     user: Joi.object(),
   };
 
-  const { error } = memorySchema.validate(payload);
+  const options = {
+    abortEarly: false, // include all errors
+    allowUnknown: true, // ignore unknown props
+    stripUnknown: true, // remove unknown props
+  };
+  const { error } = memorySchema.validate(payload, options);
 
   if (error) {
     throw new Error(error);

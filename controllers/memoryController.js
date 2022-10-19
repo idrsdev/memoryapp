@@ -3,7 +3,6 @@ import asyncHandler from "express-async-handler";
 import Memory from "../models/memoryModel.js";
 import Comment from "../models/commentModel.js";
 import sharedMemory from "../models/sharedMemoryModel.js";
-import { json } from "express";
 import likedMemory from "../models/likedMemoryModel.js";
 
 // @desc    get Memories and filters based on optional parameters
@@ -28,7 +27,36 @@ const getMemories = asyncHandler(async (req, res) => {
     };
   }
 
-  const memories = await Memory.find(seacrObject);
+  const aggregation = [
+    {
+      $match: seacrObject,
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "user",
+        foreignField: "user",
+        as: "comments",
+      },
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "memory",
+        as: "comments",
+        pipeline: [
+          {
+            $match: {},
+          },
+          // { $sort: { createdAt: 1 } },
+          { $limit: 2 }, // @desc: Comments per memory
+        ],
+      },
+    },
+  ];
+
+  const memories = await Memory.aggregate(aggregation);
   res.send(memories);
 });
 
@@ -46,6 +74,22 @@ const createMemory = asyncHandler(async (req, res) => {
   });
 
   res.status(201).json(memory);
+});
+
+// @desc    Delte a Memory
+// @route   POST /api/memory/:id
+// @access  Private/Auth
+const deleteMemory = asyncHandler(async (req, res) => {
+  const memoryId = req.params.id;
+
+  const memory = await Memory.findById(memoryId);
+
+  if (!memory || memory.user.toString() !== req.user._id.toString()) {
+    res.status(404);
+    throw new Error("Operation Failed");
+  }
+
+  res.status(204).json({ message: "success" });
 });
 
 // @desc    Create a comment for given memory{Id}
@@ -142,6 +186,7 @@ const likeMemory = asyncHandler(async (req, res) => {
 export {
   getMemories,
   createMemory,
+  deleteMemory,
   createMemoryComment,
   shareMemory,
   likeMemory,

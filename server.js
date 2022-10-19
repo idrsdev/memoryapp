@@ -17,7 +17,7 @@ process.env.NODE_ENV === "development" ? app.use(morgan("dev")) : null;
 
 app.use(express.json());
 
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/memory", memoryRoutes);
 
 app.use(notFound);
