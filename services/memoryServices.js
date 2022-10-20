@@ -22,7 +22,7 @@ const getMemoriesService = async (req, res) => {
     };
   }
 
-  const aggregation = [
+  const getMemoriesWithLimitedComments = [
     {
       $match: seacrObject,
     },
@@ -48,9 +48,31 @@ const getMemoriesService = async (req, res) => {
         ],
       },
     },
+    {
+      $lookup: {
+        from: "comments",
+        let: { id: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$$id", "$memory"] },
+            },
+          },
+          { $count: "count" },
+        ],
+        as: "totalComments",
+      },
+    },
+    {
+      $addFields: {
+        totalComments: {
+          $ifNull: [{ $arrayElemAt: ["$totalComments.count", 0] }, 0],
+        },
+      },
+    },
   ];
 
-  const memories = await Memory.aggregate(aggregation);
+  const memories = await Memory.aggregate(getMemoriesWithLimitedComments);
   return memories;
 };
 

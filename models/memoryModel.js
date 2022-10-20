@@ -18,10 +18,10 @@ const memorySchema = mongoose.Schema({
     default: 0,
   },
 
-  totalComments: {
-    type: Number,
-    default: 0,
-  },
+  // totalComments: {
+  //   type: Number,
+  //   default: 0,
+  // },
   totalLikes: {
     type: Number,
     default: 0,
