@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 import Comment from "../models/commentModel.js";
 
 const getPaginatedMemoryCommentsService = async (req, res) => {
@@ -17,9 +19,9 @@ const getPaginatedMemoryCommentsService = async (req, res) => {
 
   const totalComment = await Comment.countDocuments({ memory: memoryId });
 
-  const loadMore = page * commentsPerPage < totalComment ? true : null;
+  const hasMore = page * commentsPerPage < totalComment ? true : null;
 
-  return { totalComment, comments, commentsPerPage, loadMore };
+  return { totalComment, comments, limit: commentsPerPage, hasMore, page };
 };
 
 const deleteCommentService = async (req, res) => {
@@ -35,4 +37,45 @@ const deleteCommentService = async (req, res) => {
   return { message: "success" };
 };
 
-export { getPaginatedMemoryCommentsService, deleteCommentService };
+const getCursorBasedMemoryCommentsService = async (req, res) => {
+  const memoryId = req.query.memoryId;
+  const indexOfLastCommentFetched = req.query.next
+    ? mongoose.Types.ObjectId(req.query.next)
+    : null;
+
+  const getCursorBasedComments = [
+    {
+      $match: {
+        memory: mongoose.Types.ObjectId(memoryId),
+      },
+    },
+    {
+      $sort: {
+        _id: 1,
+      },
+    },
+    {
+      $match: {
+        _id: {
+          ...(indexOfLastCommentFetched
+            ? { $gt: indexOfLastCommentFetched }
+            : {}),
+        },
+      },
+    },
+    {
+      $limit: 4,
+    },
+  ];
+
+  const comments = await Comment.aggregate(getCursorBasedComments);
+  const next = comments[comments.length - 1]._id || null;
+
+  return { comments, next };
+};
+
+export {
+  getPaginatedMemoryCommentsService,
+  deleteCommentService,
+  getCursorBasedMemoryCommentsService,
+};

@@ -5,6 +5,7 @@ import {
   createMemoryService,
   deleteMemoryService,
   getMemoriesService,
+  getUserMemoriesService,
   likeMemoryService,
   shareMemoryService,
 } from "../services/memoryServices.js";
@@ -15,6 +16,15 @@ import {
 const getMemories = asyncHandler(async (req, res) => {
   const memories = await getMemoriesService(req, res);
   res.status(200).json(memories);
+});
+
+// @desc    get Memories of current user
+// @route   Get /api/memory/me
+// @access  Private/Auth
+const getUserMemories = asyncHandler(async (req, res) => {
+  const memories = await getUserMemoriesService(req, res);
+
+  return res.status(200).json(memories);
 });
 
 // @desc    Create a Memory
@@ -59,6 +69,7 @@ const likeMemory = asyncHandler(async (req, res) => {
 
 export {
   getMemories,
+  getUserMemories,
   createMemory,
   deleteMemory,
   createMemoryComment,

@@ -3,15 +3,30 @@ import asyncHandler from "express-async-handler";
 import {
   deleteCommentService,
   getPaginatedMemoryCommentsService,
+  getCursorBasedMemoryCommentsService,
 } from "../services/commentServices.js";
 
 // @desc get Comments
 // @route GET /api/comment
 // @access Private/Auth
 const getComments = asyncHandler(async (req, res, next) => {
-  const comments = await getPaginatedMemoryCommentsService(req, res);
+  let paginationMethod = req.query.paginationMethod;
 
-  return res.status(201).json(comments);
+  const allowedPaginatedMethods = {
+    cursorBased: "cursorBased",
+    offsetBased: "offsetBased",
+  };
+
+  if (!(paginationMethod in allowedPaginatedMethods)) {
+    paginationMethod = null;
+  }
+
+  const comments =
+    paginationMethod === "cursorBased"
+      ? await getCursorBasedMemoryCommentsService(req, res)
+      : await getPaginatedMemoryCommentsService(req, res);
+
+  return res.status(200).json(comments);
 });
 
 // @desc delete Comments

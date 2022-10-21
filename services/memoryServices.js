@@ -76,6 +76,20 @@ const getMemoriesService = async (req, res) => {
   return memories;
 };
 
+const getUserMemoriesService = async (req, res) => {
+  const offset = Math.abs(req.query.p);
+  const page = !offset || offset === 0 ? 1 : offset;
+
+  const limit = 10;
+
+  const memories = await Memory.find({ user: req.user._id })
+    .sort({ _id: 1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  return { memories, page };
+};
+
 const createMemoryService = async (req, res) => {
   const { title, description, tags } = req.body;
 
@@ -181,6 +195,7 @@ const likeMemoryService = async (req, res) => {
 
 export {
   getMemoriesService,
+  getUserMemoriesService,
   createMemoryService,
   deleteMemoryService,
   createMemoryCommentService,

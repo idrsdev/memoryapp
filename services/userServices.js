@@ -1,5 +1,4 @@
 import User from "../models/userModel.js";
-import Memory from "../models/memoryModel.js";
 
 import { userWithNoPassword } from "../utils/userWithoutPassword.js";
 import generateToken from "../utils/generateToken.js";
@@ -41,9 +40,4 @@ const authenticateUserService = async (req, res) => {
   };
 };
 
-const getUserMemoriesService = async (req, res) => {
-  const memories = await Memory.find({ user: req.user._id });
-  return memories;
-};
-
-export { createUserService, authenticateUserService, getUserMemoriesService };
+export { createUserService, authenticateUserService };
