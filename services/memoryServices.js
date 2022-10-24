@@ -91,12 +91,13 @@ const getUserMemoriesService = async (req, res) => {
 };
 
 const createMemoryService = async (req, res) => {
-  const { title, description, tags } = req.body;
+  const { title, description, tags, images } = req.body;
 
   const memory = await Memory.create({
     title,
     description,
     tags,
+    images,
     user: req.user._id,
   });
 

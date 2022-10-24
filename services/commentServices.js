@@ -39,6 +39,8 @@ const deleteCommentService = async (req, res) => {
 
 const getCursorBasedMemoryCommentsService = async (req, res) => {
   const memoryId = req.query.memoryId;
+  const limit = req.params.limit || 10;
+
   const indexOfLastCommentFetched = req.query.next
     ? mongoose.Types.ObjectId(req.query.next)
     : null;
@@ -64,7 +66,7 @@ const getCursorBasedMemoryCommentsService = async (req, res) => {
       },
     },
     {
-      $limit: 4,
+      $limit: limit,
     },
   ];
 

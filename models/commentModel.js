@@ -26,5 +26,7 @@ const commentSchema = mongoose.Schema({
   ],
 });
 
+commentSchema.index({ memory: 1, _id: 1 });
+
 const Comment = mongoose.model("Comment", commentSchema);
 export default Comment;
