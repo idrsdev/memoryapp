@@ -26,6 +26,10 @@ const getMemoriesService = async (req, res) => {
     {
       $match: seacrObject,
     },
+    // @desc: Implement $next to find next memories!
+    {
+      $limit: 10,
+    },
     {
       $lookup: {
         from: "comments",
@@ -34,6 +38,7 @@ const getMemoriesService = async (req, res) => {
         as: "comments",
       },
     },
+    // @desc: Load 2 post related comments with their author info
     {
       $lookup: {
         from: "comments",
@@ -44,10 +49,36 @@ const getMemoriesService = async (req, res) => {
           {
             $match: {},
           },
+          {
+            $sort: { memory: 1 },
+          },
           { $limit: 2 }, // @desc: Comments per memory
+          {
+            $lookup: {
+              from: "users",
+              localField: "user",
+              foreignField: "_id",
+              as: "user",
+            },
+          },
+          {
+            $unwind: "$user",
+          },
+          {
+            $group: {
+              _id: "$_id",
+              comment: {
+                $first: "$comment",
+              },
+              user: {
+                $first: "$user",
+              },
+            },
+          },
         ],
       },
     },
+    // @desc: Calculating total comments for given Memory
     {
       $lookup: {
         from: "comments",
@@ -139,13 +170,13 @@ const shareMemoryService = async (req, res) => {
 
   const { tags, description } = req.body;
 
-  const originalMemory = await Memory.findById({ _id: memoryId });
+  const originalMemory = await Memory.findById({ _id: memoryId }).lean();
+
   if (!originalMemory) {
     throw new Error("No such memory exists");
   }
 
-  const { _doc: originalMemoryDoc } = originalMemory;
-  const { _id: originalMemoryId, ...originalMemoryCopy } = originalMemoryDoc;
+  const { _id: originalMemoryId, ...originalMemoryCopy } = originalMemory;
 
   if (Array.isArray(tags) && tags.length > 1) {
     originalMemoryCopy.tags = tags;

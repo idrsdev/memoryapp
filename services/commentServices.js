@@ -41,14 +41,24 @@ const getCursorBasedMemoryCommentsService = async (req, res) => {
   const memoryId = req.query.memoryId;
   const limit = req.params.limit || 10;
 
-  const indexOfLastCommentFetched = req.query.next
+  const isValidObjectId = req.query.next
+    ? mongoose.Types.ObjectId.isValid(req.query.next)
+    : null;
+
+  const indexOfLastCommentFetched = isValidObjectId
     ? mongoose.Types.ObjectId(req.query.next)
     : null;
+
+  const startingPoint = {};
+  if (indexOfLastCommentFetched) {
+    startingPoint["_id"] = { $gt: indexOfLastCommentFetched };
+  }
 
   const getCursorBasedComments = [
     {
       $match: {
         memory: mongoose.Types.ObjectId(memoryId),
+        ...(indexOfLastCommentFetched ? startingPoint : {}),
       },
     },
     {
@@ -57,20 +67,20 @@ const getCursorBasedMemoryCommentsService = async (req, res) => {
       },
     },
     {
-      $match: {
-        _id: {
-          ...(indexOfLastCommentFetched
-            ? { $gt: indexOfLastCommentFetched }
-            : {}),
-        },
-      },
-    },
-    {
       $limit: limit,
     },
   ];
 
   const comments = await Comment.aggregate(getCursorBasedComments);
+  // @desc: Measure time performance of both
+
+  // const commentsWithoutAggregation = await Comment.find({
+  //   memory: mongoose.Types.ObjectId(memoryId),
+  //   ...(indexOfLastCommentFetched ? startingPoint : {}),
+  // })
+  //   .sort({ _id: 1 })
+  //   .limit(2);
+
   const next = comments[comments.length - 1]._id || null;
 
   return { comments, next };
