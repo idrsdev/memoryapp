@@ -39,7 +39,7 @@ const deleteCommentService = async (req, res) => {
 
 const getCursorBasedMemoryCommentsService = async (req, res) => {
   const memoryId = req.query.memoryId;
-  const limit = req.params.limit || 10;
+  const limit = Number(req.query.limit) || 10;
 
   const isValidObjectId = req.query.next
     ? mongoose.Types.ObjectId.isValid(req.query.next)
@@ -71,15 +71,17 @@ const getCursorBasedMemoryCommentsService = async (req, res) => {
     },
   ];
 
+  // @desc: Measure time performance of both approached to find comments
   const comments = await Comment.aggregate(getCursorBasedComments);
-  // @desc: Measure time performance of both
 
-  // const commentsWithoutAggregation = await Comment.find({
+  // const comments = await Comment.find({
   //   memory: mongoose.Types.ObjectId(memoryId),
   //   ...(indexOfLastCommentFetched ? startingPoint : {}),
   // })
   //   .sort({ _id: 1 })
-  //   .limit(2);
+  //   .limit(limit);
+
+  // @result: Comparable performance using aggregation and find, limit, sort combo
 
   const next = comments[comments.length - 1]._id || null;
 

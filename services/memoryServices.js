@@ -4,7 +4,13 @@ import sharedMemory from "../models/sharedMemoryModel.js";
 import likedMemory from "../models/likedMemoryModel.js";
 
 const getMemoriesService = async (req, res) => {
-  const { text: searchText, tags } = req.query;
+  const { text: searchText, tags, p } = req.query;
+
+  const pageNo = Math.abs(p);
+  const page = !pageNo || pageNo === 0 ? 1 : pageNo;
+
+  const limit = 10;
+  const offset = (page - 1) * limit;
 
   const targetTags = Array.isArray(tags) ? tags : [];
 
@@ -26,33 +32,45 @@ const getMemoriesService = async (req, res) => {
     {
       $match: seacrObject,
     },
-    // @desc: Implement $next to find next memories!
     {
-      $limit: 10,
-    },
-    {
-      $lookup: {
-        from: "comments",
-        localField: "user",
-        foreignField: "user",
-        as: "comments",
+      $sort: {
+        _id: 1,
       },
     },
-    // @desc: Load 2 post related comments with their author info
+    {
+      $skip: offset,
+    },
+    {
+      $limit: limit,
+    },
     {
       $lookup: {
         from: "comments",
-        localField: "_id",
-        foreignField: "memory",
         as: "comments",
+        let: {
+          id: "$_id",
+          user: "$user",
+        },
         pipeline: [
           {
-            $match: {},
+            $match: {
+              $and: [
+                {
+                  $expr: {
+                    $eq: ["$$user", "$user"],
+                  },
+                },
+                {
+                  $expr: {
+                    $eq: ["$$id", "$memory"],
+                  },
+                },
+              ],
+            },
           },
           {
-            $sort: { memory: 1 },
+            $limit: 2, // @desc: Comments per memory
           },
-          { $limit: 2 }, // @desc: Comments per memory
           {
             $lookup: {
               from: "users",
@@ -78,33 +96,14 @@ const getMemoriesService = async (req, res) => {
         ],
       },
     },
-    // @desc: Calculating total comments for given Memory
-    {
-      $lookup: {
-        from: "comments",
-        let: { id: "$_id" },
-        pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ["$$id", "$memory"] },
-            },
-          },
-          { $count: "count" },
-        ],
-        as: "totalComments",
-      },
-    },
-    {
-      $addFields: {
-        totalComments: {
-          $ifNull: [{ $arrayElemAt: ["$totalComments.count", 0] }, 0],
-        },
-      },
-    },
   ];
 
   const memories = await Memory.aggregate(getMemoriesWithLimitedComments);
-  return memories;
+  const total = await Memory.count();
+
+  const hasMore = page * limit < total ? true : null;
+
+  return { memories, total, limit, hasMore };
 };
 
 const getUserMemoriesService = async (req, res) => {
