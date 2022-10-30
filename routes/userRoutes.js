@@ -1,6 +1,10 @@
 import express from "express";
 
-import { authUser, registerUser } from "../controllers/userController.js";
+import {
+  authUser,
+  registerUser,
+  verifyUser,
+} from "../controllers/userController.js";
 
 import {
   validateAuthCredentials,
@@ -11,5 +15,6 @@ const router = express.Router();
 
 router.route("/").post(validateNewUser, registerUser);
 router.route("/login").post(validateAuthCredentials, authUser);
+router.route("/verify/:email/:token").get(verifyUser);
 
 export default router;
