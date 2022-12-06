@@ -3,8 +3,10 @@ import asyncHandler from "express-async-handler";
 import {
   authenticateUserService,
   createUserService,
-  userVerifyService,
+  passwordResetEmailService,
+  passwordResetService,
   resendAccountActivationLinkService,
+  userVerifyService,
 } from "../services/userServices.js";
 
 // @desc Register new user
@@ -42,4 +44,29 @@ const resendAccountActivationEmail = asyncHandler(async (req, res, next) => {
   return res.status(response.statusCode).json(response.data);
 });
 
-export { authUser, registerUser, verifyUser, resendAccountActivationEmail };
+// @desc Send user an email along with a link to reset thier password
+// @route POST /api/user/reset-password
+// @access Public
+const resetPasswordEmail = asyncHandler(async (req, res, next) => {
+  const response = await passwordResetEmailService(req, res);
+
+  return res.status(response.statusCode).json(response.data);
+});
+
+// @desc Reset user password
+// @route POST /api/user/reset-password/:userId/:token
+// @access Public
+const resetPassword = asyncHandler(async (req, res, next) => {
+  const response = await passwordResetService(req, res);
+
+  return res.status(response.statusCode).json(response.data);
+});
+
+export {
+  authUser,
+  registerUser,
+  verifyUser,
+  resetPassword,
+  resetPasswordEmail,
+  resendAccountActivationEmail,
+};

@@ -49,6 +49,16 @@ const emailVerificationTemplate = (name, verificationUrl) => {
   );
 };
 
+const passwordResetTemplate = (name, resetPasswordUrl) => {
+  return (
+    "Hello " +
+    name +
+    "<br/>" +
+    `Click <a href = '${resetPasswordUrl}'>here</a> to reset your Password.` +
+    "<br/> Thank You!\n"
+  );
+};
+
 const mailOptionObject = (receiverEmail, subject, message) => {
   return {
     from: "no-reply@gmail.com",
@@ -58,4 +68,4 @@ const mailOptionObject = (receiverEmail, subject, message) => {
   };
 };
 
-export { emailVerificationTemplate, sendEmail };
+export { emailVerificationTemplate, passwordResetTemplate, sendEmail };
