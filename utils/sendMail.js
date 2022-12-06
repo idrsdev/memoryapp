@@ -20,10 +20,12 @@ const sendEmail = async (to, subject, message) => {
       .then((msg) => {
         resolve({
           statusCode: 200,
-          message:
-            "A verification email has been sent to " +
-            to +
-            ". It will be expire after 15 minutes. If you not get verification Email click on resend token.",
+          data: {
+            message:
+              "A verification email has been sent to " +
+              to +
+              ". It will be expire after 15 minutes. If you not get verification Email click on resend token.",
+          },
         });
       })
       .catch((err) => {

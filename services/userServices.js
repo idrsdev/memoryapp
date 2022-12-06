@@ -28,7 +28,7 @@ const createUserService = async (req, res) => {
     token: crypto.randomBytes(16).toString("hex"),
   });
 
-  const url = `http://${req.headers.host}/api/user/confirmation/${newUser.email}/${verificationToken.token}`;
+  const url = `http://${req.headers.host}/api/user/verify/${newUser.email}/${verificationToken.token}`;
   const message = emailVerificationTemplate(newUser.name, url);
   const subject = "Account Verification Link";
 
@@ -39,6 +39,10 @@ const createUserService = async (req, res) => {
 const authenticateUserService = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    throw new Error("Invalid email or password");
+  }
 
   if (!user.isVerified) {
     res.status(403);
@@ -51,8 +55,11 @@ const authenticateUserService = async (req, res) => {
   }
 
   return {
-    ...userWithNoPassword(user),
-    token: generateToken(user._id),
+    statusCode: 200,
+    data: {
+      ...userWithNoPassword(user),
+      token: generateToken(user._id),
+    },
   };
 };
 
@@ -79,7 +86,10 @@ const userVerifyService = async (req, res) => {
   }
 
   if (user.isVerified) {
-    return { message: "Already verified. Please Login" };
+    return {
+      statusCode: 200,
+      data: { message: "Already verified. Please Login" },
+    };
   }
 
   user.isVerified = true;
@@ -91,9 +101,51 @@ const userVerifyService = async (req, res) => {
         throw new Error(err);
       }
 
-      resolve({ message: "Your account has been successfully verified" });
+      resolve({
+        statusCode: 200,
+        data: { message: "Already verified. Please Login" },
+      });
     });
   });
 };
 
-export { createUserService, userVerifyService, authenticateUserService };
+const resendAccountActivationLinkService = async (req, res) => {
+  const user = await User.findOne({ email: req.body.email }).lean();
+
+  if (!user) {
+    res.status(401);
+    throw new Error(
+      "We were unable to find an account associated with this email. Please SignUp!"
+    );
+  }
+
+  if (user.isVerified) {
+    return {
+      statusCode: 200,
+      data: {
+        message: "This account has been already verified. Please log in.",
+      },
+    };
+  }
+
+  await Token.deleteMany({ email: req.body.email });
+
+  const verificationToken = await Token.create({
+    _userId: user._id,
+    token: crypto.randomBytes(16).toString("hex"),
+  });
+
+  const url = `http://${req.headers.host}/api/user/verify/${user.email}/${verificationToken.token}`;
+  const message = emailVerificationTemplate(user.name, url);
+  const subject = "Account Verification Link";
+
+  const response = await sendEmail(user.email, subject, message);
+  return response;
+};
+
+export {
+  createUserService,
+  userVerifyService,
+  authenticateUserService,
+  resendAccountActivationLinkService,
+};
