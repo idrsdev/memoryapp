@@ -3,6 +3,7 @@ import asyncHandler from "express-async-handler";
 import {
   authenticateUserService,
   createUserService,
+  resendAccountActivationLinkService,
   userVerifyService,
 } from "../services/userServices.js";
 
@@ -11,17 +12,16 @@ import {
 // @access Public
 const registerUser = asyncHandler(async (req, res, next) => {
   const response = await createUserService(req, res);
-
-  return res.status(response.statusCode).json({ message: response.message });
+  return res.status(response.statusCode).json(response.data);
 });
 
 // @desc Auth user and get JWT Token
 // @route POST /api/user/login
 // @access Public
 const authUser = asyncHandler(async (req, res, next) => {
-  const user = await authenticateUserService(req, res);
+  const response = await authenticateUserService(req, res);
 
-  return res.status(200).json(user);
+  return res.status(response.statusCode).json(response.data);
 });
 
 // @desc Verify user
@@ -30,7 +30,16 @@ const authUser = asyncHandler(async (req, res, next) => {
 const verifyUser = asyncHandler(async (req, res, next) => {
   const response = await userVerifyService(req, res);
 
-  return res.status(200).json(response);
+  return res.status(response.statusCode).json(response.data);
 });
 
-export { authUser, registerUser, verifyUser };
+// @desc Resend an account activation link to user using email
+// @route POST /api/user/resend-activation-link
+// @access Public
+const resendAccountActivationEmail = asyncHandler(async (req, res, next) => {
+  const response = await resendAccountActivationLinkService(req, res);
+
+  return res.status(response.statusCode).json(response.data);
+});
+
+export { authUser, registerUser, verifyUser, resendAccountActivationEmail };

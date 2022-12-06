@@ -20,10 +20,12 @@ const sendEmail = async (to, subject, message) => {
       .then((msg) => {
         resolve({
           statusCode: 200,
-          message:
-            "A verification email has been sent to " +
-            to +
-            ". It will be expire after 15 minutes. If you not get verification Email click on resend token.",
+          data: {
+            message:
+              "A verification email has been sent to " +
+              to +
+              ". It will be expire after 15 minutes. If you not get verification Email click on resend token.",
+          },
         });
       })
       .catch((err) => {
@@ -47,6 +49,16 @@ const emailVerificationTemplate = (name, verificationUrl) => {
   );
 };
 
+const passwordResetTemplate = (name, resetPasswordUrl) => {
+  return (
+    "Hello " +
+    name +
+    "<br/>" +
+    `Click <a href = '${resetPasswordUrl}'>here</a> to reset your Password.` +
+    "<br/> Thank You!\n"
+  );
+};
+
 const mailOptionObject = (receiverEmail, subject, message) => {
   return {
     from: "no-reply@gmail.com",
@@ -56,4 +68,4 @@ const mailOptionObject = (receiverEmail, subject, message) => {
   };
 };
 
-export { emailVerificationTemplate, sendEmail };
+export { emailVerificationTemplate, passwordResetTemplate, sendEmail };
