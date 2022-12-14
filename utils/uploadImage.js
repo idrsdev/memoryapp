@@ -1,8 +1,13 @@
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    const path = `./uploads/images/`;
+    fs.mkdirSync(path, { recursive: true });
+    return cb(null, path);
+
     cb(null, "./uploads/");
   },
   filename: (req, file, cb) => {
@@ -11,7 +16,7 @@ const storage = multer.diskStorage({
       Date.now() + path.extname(file.originalname);
 
     const baseName = path.basename(
-      file.originalname,
+      file.originalname.replace(/\s/g, ""),
       path.extname(file.originalname)
     );
 
@@ -30,7 +35,7 @@ const fileFilter = (req, file, cb) => {
     : cb(new Error(`Allowed formats are ${allowedTypes}`), false);
 };
 
-const storeSingleImg = multer({
+const uploadImage = multer({
   storage,
   limits: {
     fileSize: 1024 * 1024 * 10,
@@ -39,4 +44,4 @@ const storeSingleImg = multer({
   fileFilter,
 });
 
-export default storeSingleImg;
+export default uploadImage;
