@@ -10,7 +10,7 @@ services:
         env_file:
             - ./.env
         volumes:
-            - ./:/usr/app
+            - ./:/app
         ports:
             - "1337:6000"
         command: npm run dev
