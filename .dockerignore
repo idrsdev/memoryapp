@@ -1,0 +1,14 @@
+.git
+.gitignore
+docker*.yml
+Dockerfile
+README.md
+node_modules
+seeder.js
+uploads
+
+.config
+.npm
+.vscode
+**/*dist
+**/*logs

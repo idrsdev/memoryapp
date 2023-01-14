@@ -1,0 +1,16 @@
+version: "3"
+services:
+    api:
+        container_name: api
+        build:
+            target: dev
+        environment:
+            - NODE_ENV=development
+            - PORT=6000
+        env_file:
+            - ./.env
+        volumes:
+            - ./:/usr/app
+        ports:
+            - "1337:6000"
+        command: npm run dev
